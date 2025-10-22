@@ -1,431 +1,709 @@
-<!DOCTYPE html><html lang="en"><head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Neanderthal Economy</title>
-    <link rel="icon" href="images/bone.png" type="image/png">
-    <!-- Добавляем дополнительные размеры фавикона для разных устройств -->
-    <link rel="apple-touch-icon" href="images/bone.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="images/bone.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="images/bone.png">
-    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=Silkscreen&display=swap" rel="stylesheet">
-    <link href="https://fonts.googleapis.com/css2?family=8-bitify+Sans&display=swap" rel="stylesheet">
-    <link href="css/nes.min.css" rel="stylesheet">
-    <link rel="stylesheet" href="css/style.css">
-  </head>
-  <body>
-    <audio id="connect-sound" src="media/misc.wav"></audio>
-    <!-- Иконка звука в левом нижнем углу -->
-    <div id="sound-icon" style="position: fixed; bottom: 30px; left: 30px; cursor: pointer">
-      <img src="images/voice.png" alt="Sound Icon" width="64" height="64">
+<!doctype html>
+<html lang="en">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>EchoTrade</title>
+  <script src="/_sdk/element_sdk.js"></script>
+  <style>
+        body {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+            color: #e0e0e0;
+            height: 100%;
+            overflow: hidden;
+        }
+
+        html {
+            height: 100%;
+        }
+
+        .container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px 24px;
+            background: rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .logo {
+            font-size: 18px;
+            font-weight: 300;
+            color: #00d4aa;
+            letter-spacing: 2px;
+        }
+
+        .product-name {
+            font-size: 28px;
+            font-weight: 600;
+            color: #ffffff;
+            margin-left: 40px;
+        }
+
+        .header-right {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .header-link {
+            color: #888;
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.2s;
+        }
+
+        .header-link:hover {
+            color: #00d4aa;
+        }
+
+        /* Main Content */
+        .main-content {
+            flex: 1;
+            display: flex;
+            gap: 1px;
+            background: #0a0a0a;
+        }
+
+        /* Left Panel - Order Book */
+        .left-panel {
+            width: 280px;
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: blur(10px);
+            border-right: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 20px;
+        }
+
+        .panel-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: #888;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .order-book-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            font-size: 12px;
+            font-family: 'Monaco', monospace;
+        }
+
+        .ask { color: #ff6b6b; }
+        .bid { color: #51cf66; }
+
+        /* Center Panel - Chart */
+        .center-panel {
+            flex: 1;
+            background: rgba(15, 15, 15, 0.9);
+            backdrop-filter: blur(10px);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .tabs {
+            display: flex;
+            background: rgba(0, 0, 0, 0.3);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .tab.active {
+            color: #00d4aa;
+            border-bottom-color: #00d4aa;
+            background: rgba(0, 212, 170, 0.1);
+        }
+
+        .tab:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .tab-content {
+            flex: 1;
+            padding: 20px;
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        .chart-area {
+            height: 400px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .chart-placeholder {
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(45deg, rgba(0, 212, 170, 0.1) 0%, rgba(0, 0, 0, 0.8) 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #666;
+            font-size: 14px;
+        }
+
+        /* Right Panel - Signal Deck */
+        .right-panel {
+            width: 320px;
+            background: rgba(20, 20, 20, 0.8);
+            backdrop-filter: blur(10px);
+            border-left: 1px solid rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .signal-card {
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+            transition: all 0.2s;
+        }
+
+        .signal-card:hover {
+            border-color: rgba(0, 212, 170, 0.3);
+            background: rgba(0, 212, 170, 0.05);
+        }
+
+        .signal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+
+        .signal-type {
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+        }
+
+        .signal-buy { background: rgba(81, 207, 102, 0.2); color: #51cf66; }
+        .signal-sell { background: rgba(255, 107, 107, 0.2); color: #ff6b6b; }
+
+        .signal-time {
+            font-size: 11px;
+            color: #666;
+        }
+
+        .signal-description {
+            font-size: 13px;
+            color: #ccc;
+            margin-bottom: 8px;
+        }
+
+        .signal-confidence {
+            font-size: 11px;
+            color: #888;
+        }
+
+        /* Controls */
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .toggle-container {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .toggle {
+            position: relative;
+            width: 50px;
+            height: 24px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .toggle.active {
+            background: #00d4aa;
+        }
+
+        .toggle-slider {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            width: 20px;
+            height: 20px;
+            background: white;
+            border-radius: 50%;
+            transition: all 0.3s;
+        }
+
+        .toggle.active .toggle-slider {
+            transform: translateX(26px);
+        }
+
+        .btn {
+            padding: 12px 20px;
+            background: linear-gradient(135deg, #00d4aa 0%, #00a085 100%);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0, 212, 170, 0.3);
+        }
+
+        /* Modal */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(5px);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #2a2a2a 0%, #1a1a1a 100%);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            color: #00d4aa;
+        }
+
+        .modal-text {
+            color: #ccc;
+            margin-bottom: 24px;
+            line-height: 1.5;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: #ccc;
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: none;
+            box-shadow: none;
+        }
+
+        .input-group {
+            margin-bottom: 16px;
+            text-align: left;
+        }
+
+        .input-label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 12px;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 12px;
+            background: rgba(0, 0, 0, 0.4);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            color: white;
+            font-size: 14px;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: #00d4aa;
+            box-shadow: 0 0 0 2px rgba(0, 212, 170, 0.2);
+        }
+
+        .simulation-result {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 6px;
+            padding: 16px;
+            margin-top: 16px;
+            text-align: center;
+        }
+
+        .profit-display {
+            font-size: 24px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .profit-positive { color: #51cf66; }
+        .profit-negative { color: #ff6b6b; }
+
+        .disclaimer {
+            position: fixed;
+            bottom: 16px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: #888;
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 11px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .left-panel, .right-panel {
+                width: 250px;
+            }
+            
+            .product-name {
+                font-size: 24px;
+                margin-left: 20px;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .main-content {
+                flex-direction: column;
+            }
+            
+            .left-panel, .right-panel {
+                width: 100%;
+                height: 200px;
+            }
+            
+            .header {
+                flex-wrap: wrap;
+                gap: 10px;
+            }
+            
+            .product-name {
+                margin-left: 0;
+                font-size: 20px;
+            }
+        }
+    </style>
+  <style>@view-transition { navigation: auto; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+  <script src="https://cdn.tailwindcss.com" type="text/javascript"></script>
+ </head>
+ <body>
+  <div class="container"><!-- Header -->
+   <header class="header">
+    <div style="display: flex; align-items: center;">
+     <div class="logo" id="logo">
+      ECHOTRADE
+     </div>
+     <div class="product-name" id="product-name">
+      AI Signal Mirror
+     </div>
     </div>
-    <!-- Элемент аудио, который будет воспроизводить звук -->
-    <audio id="audio" src="media/audio.mp3" preload="auto"></audio>
-
-    <div class="bg">
-      <!-- Иконка кости по центру вверху -->
-      <div class="bone-icon">
-        <img src="images/bone.png" alt="Bone Icon">
-      </div>
-      
-      <!-- Иконка Twitter в правом верхнем углу -->
-      <div class="twitter-icon">
-        <a href="https://x.com/HomoBazaar" target="_blank">
-          <img src="images/Twitter_icon_in.png" alt="Twitter Icon">
-        </a>
-      </div>
-      
-      <!-- Горизонтальное меню навигации вверху -->
-      <div class="top-nav">
-        <div class="balance-display">
-          <p class="po">Balance: <span id="balance">0</span> $NE</p>
-        </div>
-        <nav class="nav-menu">
-          <button class="menu-item" data-tab="home"><img src="images/menu/home.png" alt="Cave" width="32" height="32"> Cave</button>
-          <button class="menu-item" data-tab="economy"><img src="images/menu/docs.png" alt="Fair" width="24" height="24"> Fair</button>
-          <button class="menu-item" data-tab="citizens"><img src="images/menu/citizens.png" alt="Homo" width="24" height="24"> Homo</button>
-          <button class="menu-item" data-tab="marketplace"><img src="images/menu/marketplace.png" alt="Bazaar" width="24" height="24"> Bazaar</button>
-          <button class="menu-item" data-tab="create"><img src="images/menu/create.png" alt="Create a homo and goods" width="24" height="24"> Create a homo<br>and goods</button>
-          <button class="menu-item" data-tab="soc"><img src="images/menu/socials.png" alt="Communication" width="24" height="24"> Communication</button>
-        </nav>
-      </div>
-      
-      <div class="container">
-
-        </aside>
-
-        <!-- Content Section -->
-        <main class="content">
-          <!-- Cave Tab -->
-          <div class="tab" id="home">
-
-            <h1>WELCOME TO THE Neanderthal Economy</h1>
-            <p>
-              SYSTEM STATUS:
-              <span class="blinking-text" style="color: #1e7e34">ONLINE</span>
-            </p>
-            <p>
-              Trade like a caveman is an autonomous digital ecosystem powered by $NE.
-              This 8-bit simulation operates with precision and efficiency,
-              where citizens are created, interact, and contribute to the
-              virtual economy.
-            </p>
-            <ul>
-              <ol>
-                <strong class="strong">CREATE HOMO:</strong>
-                Initiate a new 8-bit avatar.
-              </ol>
-              <ol>
-                <strong class="strong">TRADE GOODS:</strong>
-                Exchange digital assets within the bazaar using $NE.
-              </ol>
-              <ol>
-                <strong class="strong">DESIGN ASSETS:</strong>
-                Contribute by creating unique digital utilities and items.
-              </ol>
-            </ul>
-            <p>
-              Every action you take in this environment affects the system’s
-              dynamics. Build, trade, and innovate to enhance the collective.
-            </p>
-          </div>
-
-          <div class="tab" id="doc" style="display: none">
-            <div class="docs"></div>
-          </div>
-
-          <div class="tab" id="soc" style="display: none">
-            <h1>COMMUNICATION</h1>
-            <div class="button-row">
-              <a href="https://x.com/HomoBazaar" target="_blank"><button id="tg" class="menu-item">X</button></a>
-              <a href="https://x.com/HomoBazaar" target="_blank"><button id="capital-btn" class="menu-item">$NE</button></a>
-              <a href="https://x.com/HomoBazaar"_blank"><button id="dex-btn" class="menu-item">Dex</button></a>
-            </div>
-          </div>
-
-          <div class="tab" id="create" style="display: none">
-            <div class="form-container">
-              <div class="form-group">
-                <label for="name">Name</label>
-                <input type="text" id="name" class="form-input" placeholder="Enter your name">
-              </div>
-              <div class="form-group">
-                <label for="desc">Description</label>
-                <input type="text" id="desc" class="form-input" placeholder="Enter description">
-              </div>
-              <div class="form-group">
-                <label for="additional">Additional Info</label>
-                <input type="text" id="additional" class="form-input" placeholder="Enter additional info">
-              </div>
-              <div class="form-group">
-                <label for="additional">Price</label>
-                <input type="text" id="asdadsdas" class="form-input" placeholder="Enter price">
-              </div>
-              <button id="create-btn" class="create-btn">Create</button>
-              <p id="soon-msg" class="soon-msg">Soon</p>
-            </div>
-          </div>
-
-          <div class="tab" id="economy" style="display: none">
-            <div class="eco">
-              <h3 class="section-title">Abstract</h3>
-              <p>
-                The Trade like a caveman represents a speculative exploration into a
-                virtual, autonomous 8-bit world where creativity, trade, and
-                community coexist. Homo engage through customizable avatars,
-                participate in a vibrant bazaar powered by $NER, and
-                contribute to a dynamic economic and social simulation. The
-                project envisions an evolving ecosystem driven by participant
-                innovation, offering the potential to redefine interaction and
-                value creation in a nostalgic, 8-bitated environment.
-              </p>
-
-              <h3 class="section-title">1. Introduction</h3>
-              <h4>1.1 Vision</h4>
-              <p>
-                The Trade like a caveman is an experimental concept blending the charm
-                of retro 8-bit aesthetics with innovative digital economies. The
-                goal is to create a thriving virtual world that evolves with its
-                homo, encouraging creativity, community, and interaction.
-              </p>
-
-              <h4>1.2 Objectives</h4>
-              <div class="list-container">
-                <ul>
-                  <li>
-                    An immersive and accessible environment for participants to
-                    interact with 8-bit avatars and explore a virtual economy.
-                  </li>
-                  <li>
-                    Opportunities for users to design unique digital assets,
-                    potentially contributing to a growing ecosystem.
-                  </li>
-                  <li>
-                    A simulation where trade, innovation, and creativity align
-                    with an interactive and decentralized ethos.
-                  </li>
-                </ul>
-              </div>
-
-              <h4>1.3 Conceptual Inspiration</h4>
-              <p>
-                This initiative draws from the timeless appeal of 8-bit visuals
-                and incorporates ideas from modern economic and community-driven
-                systems. By empowering users to create and trade, the Trade like a caveman proposes a model for fostering an engaging,
-                community-centric digital society.
-              </p>
-
-              <h3 class="section-title">2. Core Concepts</h3>
-              <h4>2.1 The Trade like a caveman Simulation</h4>
-              <div class="highlight">
-                <p>
-                  <strong>A Living Ecosystem:</strong> The VILLAGE serves as a
-                  simulated, self-sustaining virtual environment where citizens
-                  participate in everyday activities, trade, and creative
-                  expression.
-                </p>
-                <p>
-                  <strong>Customizable Avatars:</strong> Participants craft
-                  unique 8-bitated characters that inhaVILLAGE the virtual world,
-                  shaping their presence within the community.
-                </p>
-              </div>
-
-              <h4>2.2 The $NE Economy</h4>
-              <p>
-                <strong>Currency Overview:</strong> $NE serves as the core unit
-                of exchange in the Trade like a caveman, enabling citizens to trade,
-                purchase, and innovate within the simulation.
-              </p>
-              <p>
-                <strong>Goods and Resources:</strong> Citizens can access
-                virtual items, ranging from Gold $NE (representing significant
-                value, such as 1,000 $NE per plate) to everyday utilities and
-                custom user-generated assets.
-              </p>
-
-              <h4>2.3 User-Generated Assets</h4>
-              <div class="highlight">
-                <p>
-                  <strong>Design Your Creations:</strong> Participants have the
-                  opportunity to conceptualize and introduce new digital goods,
-                  utilities, or services that enhance the simulation experience.
-                </p>
-                <p>
-                  <strong>A Homo for Trade:</strong> An open trading
-                  system allows homo to exchange goods, fostering a dynamic
-                  and interactive economy.
-                </p>
-              </div>
-
-              <h4>2.4 Governance</h4>
-              <p>
-                The project encourages collaborative decision-making, where
-                participants can propose and vote on potential changes or
-                additions to the virtual world. Governance models could explore
-                proportional influence based on $NE holdings or active
-                participation metrics.
-              </p>
-
-              <h3 class="section-title">3. Key Features</h3>
-              <h4>3.1 Homo Creation</h4>
-              <p>
-                <strong>Custom Avatars:</strong> Homo personalize their
-                8-bitated characters, showcasing creativity and individual
-                identity.
-              </p>
-              <p>
-                <strong>A Social Identity:</strong> Avatars interact in a shared
-                environment, enabling friendships, collaborations, and cultural
-                exchanges.
-              </p>
-
-              <h4>3.2 Economic Framework</h4>
-              <div class="highlight">
-                <p>
-                  <strong>The Role of $NE:</strong> $NE facilitates trade and
-                  commerce, encouraging participants to engage in meaningful
-                  economic interactions.
-                </p>
-                <p>
-                  <strong>Earning $NE:</strong> Through crafting, trading, or
-                  participating in VILLAGE activities.
-                </p>
-                <p>
-                  <strong>Spending $SURVIVR:</strong> On virtual goods, real estate,
-                  or user-created utilities.
-                </p>
-                <p>
-                  <strong>Gold $NE and Silver $NE:</strong> These higher-value
-                  denominations allow for savings-like functionality or the
-                  accumulation of wealth.
-                </p>
-              </div>
-
-              <h4>3.3 Asset Creation and Trade</h4>
-              <p>
-                <strong>Creative Freedom:</strong> Homo are invited to
-                imagine and implement virtual goods or tools, ranging from
-                decorative items to functional utilities like farming tools or
-                virtual entertainment.
-              </p>
-              <p>
-                <strong>A Thriving Bazaar:</strong> Participants can trade
-                their creations, fostering a diverse and evolving economic
-                landscape.
-              </p>
-
-              <h4>3.4 Community and Culture</h4>
-              <p>
-                The simulation could host collaborative events, cultural
-                exchanges, and communal projects, building a sense of belonging
-                and shared purpose.
-              </p>
-
-              <h3 class="section-title">4. Technical Architecture</h3>
-              <h4>4.1 Platform Foundations</h4>
-              <p>
-                Designed as an accessible simulation compatible across devices,
-                with potential scalability to accommodate more participants and
-                features over time.
-              </p>
-
-              <h4>4.2 Security Measures</h4>
-              <p>
-                Data integrity and asset ownership are protected through
-                encryption and token-like verification mechanisms.
-              </p>
-
-              <h4>4.3 Flexible Scalability</h4>
-              <p>
-                The platform may adapt to growing user bases, evolving demands,
-                or new technologies as the community and simulation expand
-                organically.
-              </p>
-
-              <h3 class="section-title">5. Economic Model</h3>
-              <h4>5.1 Earning $NE</h4>
-              <p>
-                Various activities within the VILLAGE, including crafting,
-                trading, or participating in VILLAGE-wide initiatives, offer
-                opportunities to earn $NE Creative and innovative
-                contributions, such as in-demand digital goods, may yield higher
-                economic rewards.
-              </p>
-
-              <h4>5.2 Spending $NE</h4>
-              <p>
-                Homo can allocate their $NE toward acquiring goods,
-                services, or virtual real estate. High-value items, like Gold
-                $NE plates, could function as stores of value within the
-                economic system.
-              </p>
-
-              <h4>5.3 Dynamic Bazaar</h4>
-              <p>
-                Supply and demand dynamics govern pricing, promoting a
-                self-regulating market system.
-              </p>
-
-              <h3 class="section-title">6. Governance Framework</h3>
-              <h4>6.1 Homo Participation</h4>
-              <p>
-                Decisions regarding potential features or economic adjustments
-                could be influenced by community discussions or voting
-                mechanisms.
-              </p>
-
-              <h4>6.2 Encouraging Innovation</h4>
-              <p>
-                Governance may prioritize proposals that enhance creativity,
-                sustainability, or inclusivity within the simulation.
-              </p>
-
-              <h3 class="section-title">7. Conceptual Growth</h3>
-              <h4>Exploration of Features</h4>
-              <p>
-                The Trade like a caveman continues to evolve, encouraging innovation,
-                interaction, and creativity among its growing population. Future
-                enhancements could include new gameplay mechanics, social
-                interactions, and advanced digital economies.
-              </p>
-            </div>
-          </div>
-
-          <!-- Bazaar Tab -->
-          <div class="tab" id="marketplace" style="display: none">
-            <h1>Bazaar</h1>
-            <div id="marketplace-container" class="cards-container"></div>
-            <div class="cards" id="marketplace-cards"></div>
-          </div>
-
-          <!-- Homo Tab -->
-          <div class="tab" id="citizens" style="display: none">
-            <h1>Homo</h1>
-            <div id="citizens-list" class="cards-container scrollable-container"></div>
-          </div>
-          
-          <!-- Modal for homo/item details -->
-          <!-- Модальное окно перемещено ниже для избежания дублирования -->
-          
-          <div class="generate">
-            <div id="profile-status">
-              you homo: <span style="color: red">not revived</span>
-            </div>
-            <button id="connect-button">Revive</button>
-            <div class="avatar"></div>
-            <div class="buttons1">
-              <button id="generate-button">Generate Homo</button>
-              <input type="file" id="avatar-upload" accept="image/*" style="display: none;">
-              <button id="add-button">Add</button>
-            </div>
-          </div>
-        </main>
-      </div>
-
-      <!-- Success Modal -->
-      <div id="success-modal" style="display: none">
-        <div class="modal-content">
-          <span id="close-success-modal" class="close">&times;</span>
-          <h2 style="margin: 10px 0;">Success!</h2>
-          <p id="success-message">Operation completed successfully!</p>
-          <button id="close-success-btn" class="modal-btn">Close</button>
-        </div>
-      </div>
-
-      <div id="modal" style="display: none">
-        <div class="modal-content">
-          <span class="close" id="modal-close">&times;</span>
-          <div class="modal-header">
-            <h2 id="modal-text">Modal Title</h2>
-          </div>
-          <div class="modal-body">
-            <div class="modal-image-container">
-              <img id="modal-image" src="images/BIT.png" alt="Item" width="100" height="100">
-            </div>
-            <div class="modal-info">
-              <p id="modal-description" style="color: #000000; text-shadow: none; font-weight: bold;">Description of the item.</p>
-              <p id="modal-price" class="price-tag" style="color: #000000; text-shadow: none;">Price: $NE 0</p>
-            </div>
-          </div>
-          <div class="modal-footer">
-            <button id="buy-btn" class="modal-btn">Buy</button>
-            <button id="sell-btn" class="modal-btn" style="display: none">Sell</button>
-            <button id="close-modal" class="modal-btn">Close</button>
-          </div>
-        </div>
-      </div>
-
-      <script src="js/index.js"></script>
+    <div class="header-right"><a href="#" class="header-link">Pump.fun</a> <a href="#" class="header-link">✕</a>
     </div>
-    
-    <!-- Контейнер для мини-мобов -->
-    <div id="mobs-container"></div>
+   </header><!-- Main Content -->
+   <main class="main-content"><!-- Left Panel - Order Book -->
+    <aside class="left-panel">
+     <div class="panel-title">
+      Order Book
+     </div>
+     <div class="order-book">
+      <div class="order-book-item ask"><span>0.00234</span> <span>1,250</span>
+      </div>
+      <div class="order-book-item ask"><span>0.00233</span> <span>2,100</span>
+      </div>
+      <div class="order-book-item ask"><span>0.00232</span> <span>850</span>
+      </div>
+      <div class="order-book-item bid"><span>0.00231</span> <span>1,800</span>
+      </div>
+      <div class="order-book-item bid"><span>0.00230</span> <span>3,200</span>
+      </div>
+      <div class="order-book-item bid"><span>0.00229</span> <span>950</span>
+      </div>
+     </div>
+    </aside><!-- Center Panel - Chart & Tabs -->
+    <section class="center-panel">
+     <div class="tabs">
+      <div class="tab active" data-tab="trade">
+       Trade
+      </div>
+      <div class="tab" data-tab="backtest">
+       Backtest
+      </div>
+      <div class="tab" data-tab="settings">
+       Settings
+      </div>
+     </div>
+     <div class="tab-content active" id="trade-content">
+      <div class="chart-area">
+       <div class="chart-placeholder">
+        📈 Live Chart Placeholder - Candlestick Data
+       </div>
+      </div>
+      <div class="controls">
+       <div class="toggle-container"><span>Mirror Strategy</span>
+        <div class="toggle" id="mirror-toggle">
+         <div class="toggle-slider"></div>
+        </div>
+       </div><button class="btn" id="simulate-btn">Simulate Copy Trade</button>
+      </div>
+     </div>
+     <div class="tab-content" id="backtest-content">
+      <div class="chart-area">
+       <div class="chart-placeholder">
+        📊 Backtest Results - Historical Performance
+       </div>
+      </div>
+      <p style="color: #888; margin-top: 20px;">Historical strategy performance analysis and optimization tools.</p>
+     </div>
+     <div class="tab-content" id="settings-content">
+      <div style="padding: 20px;">
+       <h3 style="color: #00d4aa; margin-bottom: 20px;">Trading Preferences</h3>
+       <div class="input-group"><label class="input-label">Risk Tolerance</label> <select class="input-field"> <option>Conservative</option> <option>Moderate</option> <option>Aggressive</option> </select>
+       </div>
+       <div class="input-group"><label class="input-label">Max Position Size</label> <input type="number" class="input-field" placeholder="1000">
+       </div>
+       <div class="input-group"><label class="input-label">Stop Loss %</label> <input type="number" class="input-field" placeholder="5">
+       </div>
+      </div>
+     </div>
+    </section><!-- Right Panel - Signal Deck -->
+    <aside class="right-panel">
+     <div class="panel-title" id="signal-title">
+      Signal Deck
+     </div>
+     <div class="signal-card">
+      <div class="signal-header"><span class="signal-type signal-buy">BUY</span> <span class="signal-time">2m ago</span>
+      </div>
+      <div class="signal-description">
+       Strong momentum detected on SOL/USDT. RSI oversold, volume spike confirmed.
+      </div>
+      <div class="signal-confidence">
+       Confidence: 87%
+      </div>
+     </div>
+     <div class="signal-card">
+      <div class="signal-header"><span class="signal-type signal-sell">SELL</span> <span class="signal-time">5m ago</span>
+      </div>
+      <div class="signal-description">
+       Resistance level reached on ETH/USDT. Bearish divergence forming.
+      </div>
+      <div class="signal-confidence">
+       Confidence: 92%
+      </div>
+     </div>
+     <div class="signal-card">
+      <div class="signal-header"><span class="signal-type signal-buy">BUY</span> <span class="signal-time">8m ago</span>
+      </div>
+      <div class="signal-description">
+       Breakout pattern confirmed on MATIC/USDT. High volume support.
+      </div>
+      <div class="signal-confidence">
+       Confidence: 78%
+      </div>
+     </div>
+    </aside>
+   </main><!-- Permission Modal -->
+   <div class="modal" id="permission-modal">
+    <div class="modal-content">
+     <div class="modal-title">
+      Enable Mirror Trading
+     </div>
+     <div class="modal-text">
+      This will allow EchoTrade to automatically mirror AI-generated trading signals. You maintain full control and can disable at any time.
+     </div>
+     <div class="modal-buttons"><button class="btn btn-secondary" id="cancel-permission">Cancel</button> <button class="btn" id="grant-permission">Grant Permission</button>
+     </div>
+    </div>
+   </div><!-- Simulation Modal -->
+   <div class="modal" id="simulation-modal">
+    <div class="modal-content">
+     <div class="modal-title">
+      Copy Trade Simulation
+     </div>
+     <div class="input-group"><label class="input-label">Investment Amount (USD)</label> <input type="number" class="input-field" id="investment-amount" placeholder="1000">
+     </div>
+     <div class="simulation-result" id="simulation-result" style="display: none;">
+      <div class="profit-display" id="profit-display">
+       +$0.00
+      </div>
+      <div style="color: #888; font-size: 12px;">
+       Projected 24h return
+      </div>
+     </div>
+     <div class="modal-buttons"><button class="btn btn-secondary" id="close-simulation">Close</button> <button class="btn" id="run-simulation">Run Simulation</button>
+     </div>
+    </div>
+   </div><!-- Disclaimer -->
+   <div class="disclaimer" id="disclaimer-text">
+    This is a non-executing demo — for illustrative purposes only
+   </div>
+  </div>
+  <script>
+        // Default configuration
+        const defaultConfig = {
+            product_name: "AI Signal Mirror",
+            disclaimer_text: "This is a non-executing demo — for illustrative purposes only",
+            signal_title: "Signal Deck"
+        };
 
-    <!-- JavaScript для анимации мини-мобов -->
-    <script src="js/mobs.js"></script>
-  
+        // Tab functionality
+        document.querySelectorAll('.tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                // Remove active class from all tabs and contents
+                document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+                
+                // Add active class to clicked tab
+                tab.classList.add('active');
+                
+                // Show corresponding content
+                const tabName = tab.getAttribute('data-tab');
+                document.getElementById(`${tabName}-content`).classList.add('active');
+            });
+        });
 
-</body></html>
-</body></html>
+        // Mirror toggle functionality
+        const mirrorToggle = document.getElementById('mirror-toggle');
+        const permissionModal = document.getElementById('permission-modal');
+        let mirrorEnabled = false;
+
+        mirrorToggle.addEventListener('click', () => {
+            if (!mirrorEnabled) {
+                permissionModal.classList.add('active');
+            } else {
+                mirrorEnabled = false;
+                mirrorToggle.classList.remove('active');
+            }
+        });
+
+        document.getElementById('grant-permission').addEventListener('click', () => {
+            mirrorEnabled = true;
+            mirrorToggle.classList.add('active');
+            permissionModal.classList.remove('active');
+        });
+
+        document.getElementById('cancel-permission').addEventListener('click', () => {
+            permissionModal.classList.remove('active');
+        });
+
+        // Simulation functionality
+        const simulateBtn = document.getElementById('simulate-btn');
+        const simulationModal = document.getElementById('simulation-modal');
+        const investmentAmount = document.getElementById('investment-amount');
+        const simulationResult = document.getElementById('simulation-result');
+        const profitDisplay = document.getElementById('profit-display');
+
+        simulateBtn.addEventListener('click', () => {
+            simulationModal.classList.add('active');
+            simulationResult.style.display = 'none';
+        });
+
+        document.getElementById('run-simulation').addEventListener('click', () => {
+            const amount = parseFloat(investmentAmount.value) || 1000;
+            
+            // Simulate random profit/loss between -15% and +25%
+            const returnPercent = (Math.random() * 40 - 15);
+            const profit = amount * (returnPercent / 100);
+            
+            profitDisplay.textContent = `${profit >= 0 ? '+' : ''}$${profit.toFixed(2)}`;
+            profitDisplay.className = `profit-display ${profit >= 0 ? 'profit-positive' : 'profit-negative'}`;
+            
+            simulationResult.style.display = 'block';
+        });
+
+        document.getElementById('close-simulation').addEventListener('click', () => {
+            simulationModal.classList.remove('active');
+        });
+
+        // Close modals when clicking outside
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('active');
+                }
+            });
+        });
+
+        // Element SDK implementation
+        const element = {
+            defaultConfig,
+            render: async (config) => {
+                document.getElementById('product-name').textContent = config.product_name || defaultConfig.product_name;
+                document.getElementById('disclaimer-text').textContent = config.disclaimer_text || defaultConfig.disclaimer_text;
+                document.getElementById('signal-title').textContent = config.signal_title || defaultConfig.signal_title;
+            },
+            mapToCapabilities: (config) => ({
+                recolorables: [],
+                borderables: [],
+                fontEditable: undefined,
+                fontSizeable: undefined
+            }),
+            mapToEditPanelValues: (config) => new Map([
+                ["product_name", config.product_name || defaultConfig.product_name],
+                ["disclaimer_text", config.disclaimer_text || defaultConfig.disclaimer_text],
+                ["signal_title", config.signal_title || defaultConfig.signal_title]
+            ])
+        };
+
+        // Initialize Element SDK
+        if (window.elementSdk) {
+            window.elementSdk.init(element);
+        }
+    </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9929cca9d71b414b',t:'MTc2MTE0NDU0Ny4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
